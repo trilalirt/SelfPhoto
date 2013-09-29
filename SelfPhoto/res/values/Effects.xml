@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="Effects">
+        <item>No effect</item>
+        <item>Sepia effect</item>
+        <item>Negative effect</item>
+        <item>Aqua effect</item>
+        
+        <item>Mono effect</item>
+        <item>Posterize effect</item>
+        <item>Solarize effect</item>
+        
+        
+    </string-array>
+    
+</resources>

@@ -44,6 +44,17 @@
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true" />
 
+            <Spinner
+                android:id="@+id/effects"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_below="@+id/adView"
+                android:tag="Effects" 
+                android:popupBackground="#2E2E2E"
+                
+                />
+
         </RelativeLayout>
     
 

@@ -38,9 +38,13 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.ZoomControls;
 
 public class MainActivity extends Activity {
@@ -52,6 +56,9 @@ public class MainActivity extends Activity {
 	private int currentZoomLevel = 0, maxZoomLevel = 0;
 	private boolean stopped = false;
 	private static boolean isinproc = false;
+	private CharSequence selected = "nothing";
+	private Spinner EffectSpinner;
+	
 
 
 	@Override
@@ -65,8 +72,79 @@ public class MainActivity extends Activity {
 		WindowManager.LayoutParams layout = getWindow().getAttributes();
 		layout.screenBrightness = 1F;
 		getWindow().setAttributes(layout);
-        
 		
+		EffectSpinner = (Spinner)findViewById(R.id.effects);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getApplicationContext(), R.array.Effects, android.R.layout.simple_spinner_item); 
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        EffectSpinner.setAdapter(adapter);
+        
+		EffectSpinner.setOnItemSelectedListener(
+				new AdapterView.OnItemSelectedListener() {
+				
+					public void onItemSelected(AdapterView<?> arg0, View v, int position, long id)
+			        {
+			           
+						
+						selected = (CharSequence) arg0.getItemAtPosition(position);
+						Log.i("test", "something selected" + selected);
+						//not sure
+						releaseCamera();
+						
+						mCamera = getfrontCameraInstance(getApplicationContext(), selected);
+				        Camera.Parameters mCameraparams = mCamera.getParameters();
+				        
+				        Camera.Size pictureSize = getBiggestPictureSize(mCameraparams);
+				        Camera.Size previewSize = getBiggestPreviewSize(mCameraparams);
+				                
+				        FrameLayout rl = (FrameLayout) findViewById(R.id.camera_preview);
+				        Display display = getWindowManager().getDefaultDisplay();
+				        
+				        int dwidth =  display.getWidth();
+				        int dheight = display.getHeight();
+				        int rheight;
+				        Log.i("test", "This is DISPLAY width " + dwidth + " This is height " + dheight  );
+				   
+				        Log.i("test", "This is PREVIEW WIDTH  " + previewSize.width + " This is DISPLAY WIDTH  " + dwidth  );
+				        
+				        
+				        if (previewSize.height < dwidth || previewSize.width < dheight)
+				        {
+				        	 double piccoef = 1.0*pictureSize.width/pictureSize.height;
+				             rheight = (int) (dwidth*piccoef);
+				             Log.i("test", "2 This is width " + dwidth + " This is height " + rheight  );	
+				        	
+				        }
+				        
+				        else
+				        {
+				        	double piccoef = 1.0*previewSize.width/previewSize.height;
+				            rheight = (int) (dwidth*piccoef);
+				            Log.i("test", "2 This is width " + dwidth + " This is height " + rheight  );
+				        	
+				        }
+				        
+				        rl.getLayoutParams().height = rheight;
+				        rl.getLayoutParams().width = dwidth;
+				        
+				        //rl.getLayoutParams().height = pictureSize.width;
+				        //rl.getLayoutParams().width = pictureSize.height;
+				        
+				        CameraPreview mPreview = new CameraPreview(getApplicationContext(), mCamera);
+				        //FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+				        rl.removeAllViews();
+				        rl.addView(mPreview);
+						//not sure
+					
+			        }
+
+			        public void onNothingSelected(AdapterView<?> arg0)
+			        {
+			            Log.v("test", "nothing selected");
+			        }
+				
+				});
+        
+        
 		frontcamerapresent = checkCameraHardware(getApplicationContext());
 		if (!frontcamerapresent)
 		{
@@ -128,7 +206,8 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         
-        mCamera = getfrontCameraInstance();
+             
+        mCamera = getfrontCameraInstance(getApplicationContext(), selected);
         Camera.Parameters mCameraparams = mCamera.getParameters();
         
         Camera.Size pictureSize = getBiggestPictureSize(mCameraparams);
@@ -252,7 +331,7 @@ public class MainActivity extends Activity {
 //	}
 //	
 
-	public static Camera getfrontCameraInstance(){
+	public static Camera getfrontCameraInstance(Context context, CharSequence selected){
 	        Camera c = null;
 	        int cameraCount = 0;
 	        cameraCount = Camera.getNumberOfCameras();
@@ -272,12 +351,62 @@ public class MainActivity extends Activity {
 	        Camera.Parameters parameters = c.getParameters();
 	        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 	        parameters.setRotation(270);
-	        //parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
-	        List<String> EffectsList = parameters.getSupportedColorEffects();
-
-	        c.setParameters(parameters);
 	        
-
+	        //CharSequence negativeeffect = (CharSequence) "Negative effect";
+	        //Log.i("test", "this is sequence" + negativeeffect);
+	        Log.i("test", "this is selected" + selected);
+	        if (selected.toString().contentEquals("Negative effect"))
+	        {
+	        Log.i("test", "Negative effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
+	        }
+	        if (selected.toString().contentEquals("Sepia effect"))
+	        {
+	        Log.i("test", "Sepia effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_SEPIA);
+	        }
+	        if (selected.toString().contentEquals("Aqua effect"))
+	        {
+	        Log.i("test", "Aqua effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_AQUA);
+	        }
+	        if (selected.toString().contentEquals("Mono effect"))
+	        {
+	        Log.i("test", "Mono effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_MONO);
+	        }
+	        if (selected.toString().contentEquals("Posterize effect"))
+	        {
+	        Log.i("test", "Posterize effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_POSTERIZE);
+	        }
+	        if (selected.toString().contentEquals("Solarize effect"))
+	        {
+	        Log.i("test", "Solarize effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_SOLARIZE);
+	        }
+	        // doesn;t work, don't know why
+	        if (selected.toString().contentEquals("Whiteboard effect"))
+	        {
+	        Log.i("test", "Whiteboard effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_WHITEBOARD);
+	        }
+	        if (selected.toString().contentEquals("Blackboard effect"))
+	        {
+	        Log.i("test", "Blackboard effect");
+	        parameters.setColorEffect(Camera.Parameters.EFFECT_BLACKBOARD);
+	        }
+	        
+	        
+	        
+	        else
+	        {
+	        Log.i("test", "IF DIDNT WORK");
+	        }
+	        //List<String> EffectsList = parameters.getSupportedColorEffects();
+	        
+	        
+	        c.setParameters(parameters);
 	        return c; // returns null if camera is unavailable
 	    }
 
@@ -296,7 +425,7 @@ public class MainActivity extends Activity {
 	    }
 	}
 
-private static Camera.Size getBiggestPictureSize(Camera.Parameters parameters) {
+	private static Camera.Size getBiggestPictureSize(Camera.Parameters parameters) {
         
     	Camera.Size result=null;
 
@@ -325,7 +454,7 @@ private static Camera.Size getBiggestPictureSize(Camera.Parameters parameters) {
        
       }
 
-private static Camera.Size getBiggestPreviewSize(Camera.Parameters parameters) {
+	private static Camera.Size getBiggestPreviewSize(Camera.Parameters parameters) {
     
 	Camera.Size result=null;
 
@@ -353,7 +482,6 @@ private static Camera.Size getBiggestPreviewSize(Camera.Parameters parameters) {
     return(result);
    
   }
-
 
 //this is where we write our pic to destination file
 	private PictureCallback mPicture = new PictureCallback() {
@@ -386,8 +514,8 @@ private static Camera.Size getBiggestPreviewSize(Camera.Parameters parameters) {
 	    	   camera = null;
 
 
-	           startActivity(new Intent(MainActivity.this, MainActivity.class));
-	           finish();
+	           //startActivity(new Intent(MainActivity.this, MainActivity.class));
+	           //finish();
 
 	           Handler handler = new Handler(); 
 	           handler.postDelayed(new Runnable() { 
@@ -396,8 +524,58 @@ private static Camera.Size getBiggestPreviewSize(Camera.Parameters parameters) {
 	                } 
 	           }, 1000); 
 	       }
+	       
+	     //not sure
+	        releaseCamera();
+			mCamera = getfrontCameraInstance(getApplicationContext(), selected);
+	        Camera.Parameters mCameraparams = mCamera.getParameters();
+	        
+	        Camera.Size pictureSize = getBiggestPictureSize(mCameraparams);
+	        Camera.Size previewSize = getBiggestPreviewSize(mCameraparams);
+	                
+	        FrameLayout rl = (FrameLayout) findViewById(R.id.camera_preview);
+	        Display display = getWindowManager().getDefaultDisplay();
+	        
+	        int dwidth =  display.getWidth();
+	        int dheight = display.getHeight();
+	        int rheight;
+	        Log.i("test", "This is DISPLAY width " + dwidth + " This is height " + dheight  );
+	   
+	        Log.i("test", "This is PREVIEW WIDTH  " + previewSize.width + " This is DISPLAY WIDTH  " + dwidth  );
+	        
+	        
+	        if (previewSize.height < dwidth || previewSize.width < dheight)
+	        {
+	        	 double piccoef = 1.0*pictureSize.width/pictureSize.height;
+	             rheight = (int) (dwidth*piccoef);
+	             Log.i("test", "2 This is width " + dwidth + " This is height " + rheight  );	
+	        	
+	        }
+	        
+	        else
+	        {
+	        	double piccoef = 1.0*previewSize.width/previewSize.height;
+	            rheight = (int) (dwidth*piccoef);
+	            Log.i("test", "2 This is width " + dwidth + " This is height " + rheight  );
+	        	
+	        }
+	        
+	        rl.getLayoutParams().height = rheight;
+	        rl.getLayoutParams().width = dwidth;
+	        
+	        //rl.getLayoutParams().height = pictureSize.width;
+	        //rl.getLayoutParams().width = pictureSize.height;
+	        
+	        CameraPreview mPreview = new CameraPreview(getApplicationContext(), mCamera);
+	        //FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+	        rl.removeAllViews();
+	        rl.addView(mPreview);
+	        //not sure
 
 	    }
+		
+		
+		
 	};
 
 	private static File getOutputMediaFile(){  
@@ -435,5 +613,7 @@ private static Camera.Size getBiggestPreviewSize(Camera.Parameters parameters) {
 	    mediaFile = new File(mediaStorageDir.getPath()  + "/" + timeStamp + "IMG.jpg");
 	    return mediaFile;
 	}
+
+	
 
 }
